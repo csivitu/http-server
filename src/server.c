@@ -27,7 +27,6 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   srv->address->sin_family = domain;
   srv->address->sin_port = htons(port);
   srv->address->sin_addr.s_addr = htonl(interface);
-  // ISSUE TEST
 
   srv->socket = socket(domain, type, protocol);
   if (srv->socket < 0) {
@@ -47,6 +46,15 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   }
 
   return srv;
+}
+
+// **Added the stop function to free the server resources**
+void stop(Server *srv) {
+  if (srv) {
+    close(srv->socket);  // Close the server socket
+    free(srv);           // Free the allocated memory for the server
+    printf("Server resources freed and shutdown.\n");
+  }
 }
 
 void start(Server *srv) {
