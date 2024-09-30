@@ -24,6 +24,7 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   srv->protocol = protocol;
   srv->backlog = backlog;
 
+  srv->address = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
   srv->address->sin_family = domain;
   srv->address->sin_port = htons(port);
   srv->address->sin_addr.s_addr = htonl(interface);
@@ -54,8 +55,7 @@ void start(Server *srv) {
   while (1) {
     printf("Idling.....\n");
     int addlen = sizeof(srv->address);
-    int newSocket =
-        accept(srv->socket, (struct sockaddr *)&srv->address, &addlen);
+    int newSocket = accept(srv->socket, (struct sockaddr *)&srv->address, &addlen);
     size_t bytes = read(newSocket, Input_Buffer, BUFFERSIZE - 1);
     if (bytes >= 0) {
       Input_Buffer[bytes] = '\0';
