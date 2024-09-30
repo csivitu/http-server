@@ -14,6 +14,19 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+int srv_socket = -1;
+
+void sigintHandler(int sig_num) {
+    printf("\nCaught signal %d (SIGINT).", sig_num);
+
+    if (srv_socket >= 0) {
+        close(srv_socket);
+        printf("Server socket closed.\n");
+    }
+
+    exit(EXIT_SUCCESS);
+}
+
 Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
                    uint64_t interface) {
   Server *srv = (Server *)malloc(sizeof(Server));
@@ -31,6 +44,7 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   // ISSUE TEST
 
   srv->socket = socket(domain, type, protocol);
+  srv_socket = srv->socket;
   if (srv->socket < 0) {
     perror("Socket Failure");
     exit(EXIT_FAILURE);
