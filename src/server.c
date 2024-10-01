@@ -81,7 +81,7 @@ void start(Server *srv) {
     //int addlen = sizeof(srv->address);
     socklen_t addlen = sizeof(struct sockaddr_in); 
     int newSocket =
-        accept(srv->socket, (struct sockaddr *)&srv->address, &addlen);
+        accept(srv->socket, (struct sockaddr *)srv->address, &addlen);
     size_t bytes = read(newSocket, Input_Buffer, BUFFERSIZE - 1);
     if (bytes >= 0) {
       Input_Buffer[bytes] = '\0';

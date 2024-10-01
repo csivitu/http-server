@@ -33,21 +33,23 @@ unsigned char readRequest(char *Input_Buffer, size_t bytes, Request *request) {
 void handleRequest(char *Input_Buffer, size_t bytes, int socket) {
   Request request;
   if (!readRequest(Input_Buffer, bytes, &request)) {
-    char *response = "HTTP/1.1 400 Bad Request\r\n\r\n\r\n";
+    char *response = "HTTP/1.1 400 Bad Request\r\n\r\n";
     write(socket, response, strlen(response));
     return;
   }
 
   if (strcmp(request.method, "GET") != 0) {
-    char *response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n\r\n";
+    char *response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
     write(socket, response, strlen(response));
     return;
   }
 
-  size_t path_size = strlen(WEBROOT) + strlen(request.path);
+  char* req_path = request.path;
+  if (strcmp(request.path, "/") == 0) req_path = "/index.html";
+  size_t path_size = strlen(WEBROOT) + strlen(req_path);
   char path[path_size + 1];
   strcpy(path, WEBROOT);
-  strcat(path, request.path);
+  strcat(path, req_path);
   path[path_size] = 0;
   printf("Reading file %s\n", path);
   FILE *fptr = fopen(path, "rb");
@@ -60,7 +62,7 @@ void handleRequest(char *Input_Buffer, size_t bytes, int socket) {
     strcat(buf, path);
     buf[buf_size] = 0;
     ulogger_log(LOG_WARN, buf);
-    char *response = "HTTP/1.1 404 Not Found\r\n\r\n\r\n";
+    char *response = "HTTP/1.1 404 Not Found\r\n\r\n";
     write(socket, response, strlen(response));
     return;
   };
@@ -77,7 +79,6 @@ void handleRequest(char *Input_Buffer, size_t bytes, int socket) {
   char full_response[strlen(response) + file_size];
   strcpy(full_response, response);
   memcpy(full_response + strlen(response), buffer, sizeof(buffer));
-  printf("Response: %s\n", buffer);
   write(socket, full_response, sizeof(full_response));
   return;
 }
