@@ -9,29 +9,76 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-char *parseResponse(char *Input_Buffer, size_t bytes) {
-  char *response = "HTTP/1.1 200 OK\r\n"
-                   "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+#define WEBROOT "./view"
 
-  FILE *fptr = fopen("./view/index.html", "rb");
+unsigned char readRequest(char *Input_Buffer, size_t bytes, Request *request) {
+  char **requestItems = (char **)request;
+  request->method = Input_Buffer;
+  unsigned char count = 0;
+  for (size_t i = 0; i < bytes; i++) {
+    if (Input_Buffer[i] == ' ') {
+      Input_Buffer[i] = 0;
+      requestItems[++count] = Input_Buffer + i + 1;
+    }
+    else if (Input_Buffer[i] == '\r' || Input_Buffer[i] == '\n') {
+      Input_Buffer[i] = 0;
+      break;
+    }
+  }
+  return count == 2;
+}
+
+void handleRequest(char *Input_Buffer, size_t bytes, int socket) {
+  Request request;
+  if (!readRequest(Input_Buffer, bytes, &request)) {
+    char *response = "HTTP/1.1 400 Bad Request\r\n\r\n";
+    write(socket, response, strlen(response));
+    return;
+  }
+
+  if (strcmp(request.method, "GET") != 0) {
+    char *response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
+    write(socket, response, strlen(response));
+    return;
+  }
+
+  char* req_path = request.path;
+  if (strcmp(request.path, "/") == 0) req_path = "/index.html";
+  size_t path_size = strlen(WEBROOT) + strlen(req_path);
+  char path[path_size + 1];
+  strcpy(path, WEBROOT);
+  strcat(path, req_path);
+  path[path_size] = 0;
+  printf("Reading file %s\n", path);
+  FILE *fptr = fopen(path, "rb");
 
   if (fptr == NULL) {
-    perror("Could not read base index.html file");
-    exit(EXIT_FAILURE);
+    char *msg = "Could not read file ";
+    size_t buf_size = strlen(msg) + strlen(path);
+    char buf[buf_size + 1];
+    strcpy(buf, msg);
+    strcat(buf, path);
+    buf[buf_size] = 0;
+    ulogger_log(LOG_WARN, buf);
+    char *response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    write(socket, response, strlen(response));
+    return;
   };
 
   fseek(fptr, 0, SEEK_END);
   long file_size = ftell(fptr);
   rewind(fptr);
 
-  char *buffer = (char *)(malloc(file_size + 1));
-  fread(buffer, file_size + 1, 1, fptr);
+  char buffer[file_size];
+  fread(buffer, 1, file_size, fptr);
   fclose(fptr);
 
-  char *full_response = (char *)(malloc(strlen(response) + file_size + 1));
+  char *response = "HTTP/1.1 200 OK\r\n\r\n";
+  char full_response[strlen(response) + file_size];
   strcpy(full_response, response);
-  strcat(full_response, buffer);  
-  ulogger_log(LOG_SUCCESS, "Response: %s", buffer);
-  return full_response;
+  memcpy(full_response + strlen(response), buffer, sizeof(buffer));
+  write(socket, full_response, sizeof(full_response));
+  return;
 }

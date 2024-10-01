@@ -41,6 +41,10 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   // ISSUE TEST
 
   srv->socket = socket(domain, type, protocol);
+  int reuse = 1;
+  if (setsockopt(srv->socket, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0) {
+    printf("Failed to set REUSEADDR");
+  }
 
   printf("Domain: %d\n", srv->domain);
   printf("Type: %d\n", srv->type);
@@ -77,7 +81,7 @@ void start(Server *srv) {
     //int addlen = sizeof(srv->address);
     socklen_t addlen = sizeof(struct sockaddr_in); 
     int newSocket =
-        accept(srv->socket, (struct sockaddr *)&srv->address, &addlen);
+        accept(srv->socket, (struct sockaddr *)srv->address, &addlen);
     size_t bytes = read(newSocket, Input_Buffer, BUFFERSIZE - 1);
     if (bytes >= 0) {
       Input_Buffer[bytes] = '\0';
@@ -87,8 +91,7 @@ void start(Server *srv) {
       perror("BUFFER READ ISSUE");
     }
 
-    char *response = parseResponse(Input_Buffer, bytes);
-    write(newSocket, response, strlen(response));
+    handleRequest(Input_Buffer, bytes, newSocket);
     close(newSocket);
   }
 }
