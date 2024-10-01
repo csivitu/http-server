@@ -16,6 +16,7 @@ void handle_sigint(int sig) {
     ulogger_close();
     exit(0);
 }
+
 int main() { 
   const char* port = getenv("PORT");
   const char* protocol = getenv("PROTOCOL");
@@ -23,7 +24,7 @@ int main() {
 
   signal(SIGINT, handle_sigint);
   ulogger_init("log.txt");
-  ulogger_log(LOG_SUCCESS, "Server is starting on port %d...", port);
+  ulogger_log(LOG_SUCCESS, "Server is starting on port %s...", port);
   
   
   if (port == NULL || protocol == NULL || backlog == NULL) {

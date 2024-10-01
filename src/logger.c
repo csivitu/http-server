@@ -42,11 +42,9 @@ void ulogger_log(LOG_LEVEL level, const char * fmt, ...) {
     va_list args;
     va_start(args, fmt);
     get_time();
-
     #ifndef NO_ANSI 
         printf("%s", colors[level]);
     #endif
-
     printf("[%02d/%02d/%04d -> %02d:%02d:%02d][%s] ", 
         m_time->tm_mday,
         m_time->tm_mon + 1, 
@@ -56,7 +54,6 @@ void ulogger_log(LOG_LEVEL level, const char * fmt, ...) {
         m_time->tm_sec,
         type[level]
     );
-
     // Log to file
     if (log_file) {
         fprintf(log_file, "[%02d/%02d/%04d -> %02d:%02d:%02d][%s] ", 
@@ -70,14 +67,15 @@ void ulogger_log(LOG_LEVEL level, const char * fmt, ...) {
         );
         fflush(log_file);
     }
-
     vfprintf(stdout, fmt, args);
     printf("\n%s", colors[LOG_DBG]);
-
     if (log_file) {
-        vfprintf(log_file, fmt, args);
+        va_list args_copy;
+        va_copy(args_copy, args);
+        vfprintf(log_file, fmt, args_copy);
         fprintf(log_file, "\n");
         fflush(log_file);
+        va_end(args_copy);
     }
     va_end(args);
 }
