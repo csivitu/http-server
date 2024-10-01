@@ -12,10 +12,12 @@
 #include <stdlib.h>
 #include <string.h>
 // #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
+#include "logger.h"
 
 Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
-                   uint64_t interFace) {
+                   uint64_t interFace, HandlerFunc handler) {
   Server *srv = (Server *)malloc(sizeof(Server));
 
   srv->domain = domain;
@@ -23,10 +25,12 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   srv->port = port;
   srv->protocol = protocol;
   srv->backlog = backlog;
+  srv->handler = handler;
 
   // Memory Allocation for the address, to avoid runtime error during access of srv->address
   srv->address = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
   if (srv->address == NULL) {
+      ulogger_log(LOG_ERR, "Failed to allocate memory for sockaddr_in");
       perror("Failed to allocate memory for sockaddr_in");
       free(srv);
       exit(EXIT_FAILURE);
@@ -47,6 +51,7 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   printf("Backlog: %d\n", srv->backlog);
 
   if (srv->socket < 0) {
+    ulogger_log(LOG_ERR, "Socket Failure");
     perror("Socket Failure");
     exit(EXIT_FAILURE);
   }
@@ -54,15 +59,16 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   // &srv->address results in pointer to pointer. Use srv->address
   if (bind(srv->socket, (struct sockaddr *)srv->address,
            sizeof(struct sockaddr_in)) < 0) {
+    ulogger_log(LOG_ERR, "Bind Failure");
     perror("Bind Failure");
     exit(EXIT_FAILURE);
   }
 
   if (listen(srv->socket, srv->backlog) < 0) {
+    ulogger_log(LOG_ERR, "Listen Failure");
     perror("Listen Failure");
     exit(EXIT_FAILURE);
   }
-
   return srv;
 }
 
@@ -79,11 +85,11 @@ void start(Server *srv) {
       Input_Buffer[bytes] = '\0';
       puts(Input_Buffer);
     } else {
+      ulogger_log(LOG_ERR, "BUFFER READ ISSUE");
       perror("BUFFER READ ISSUE");
     }
 
-    char *response = parseResponse(Input_Buffer, bytes);
-
+    char *response = parseResponse(srv->handler, Input_Buffer, bytes);
     write(newSocket, response, strlen(response));
     close(newSocket);
   }

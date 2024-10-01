@@ -5,15 +5,18 @@
  */
 
 #include "response.h"
+#include "logger.h"
+#include "request.h"
+#include "server.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-char *parseResponse(char *Input_Buffer, size_t bytes) {
+char *parseHtml(char *filename) {
   char *response = "HTTP/1.1 200 OK\r\n"
                    "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 
-  FILE *fptr = fopen("./view/index.html", "rb");
+  FILE *fptr = fopen(filename, "rb");
 
   if (fptr == NULL) {
     perror("Could not read base index.html file");
@@ -30,7 +33,13 @@ char *parseResponse(char *Input_Buffer, size_t bytes) {
 
   char *full_response = (char *)(malloc(strlen(response) + file_size + 1));
   strcpy(full_response, response);
-  strcat(full_response, buffer);  
+  strcat(full_response, buffer);
+}
 
-  return full_response;
+char *parseResponse(HandlerFunc handler, char *Input_Buffer, size_t bytes) {
+
+  Request request = ParseRequest(Input_Buffer);
+  char *response = handler(request);
+
+  return response;
 }
