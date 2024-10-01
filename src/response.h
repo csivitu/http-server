@@ -5,4 +5,10 @@
  */
 #include <stdlib.h>
 
-char *parseResponse(char *Input_Buffer, size_t bytes);
+typedef struct {
+  char *method;
+  char *path;
+  char *ver;
+} Request;
+
+void handleRequest(char *Input_Buffer, size_t bytes, int socket);
