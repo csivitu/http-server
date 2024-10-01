@@ -4,4 +4,4 @@ serve: ./src/*
 
 
 run: serve
-    export $(cat .env | xargs); ./server
+    export $(cat .env | xargs) && ./server
