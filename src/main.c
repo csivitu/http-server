@@ -16,6 +16,11 @@ int main() {
   const char* protocol = getenv("PROTOCOL");
   const char* backlog = getenv("BACKLOG");
 
+  if (port == NULL || protocol == NULL || backlog == NULL) {
+    fprintf(stderr, "Environment variables PORT, PROTOCOL, and BACKLOG must be set.\n");
+    return 1;
+  }
+
   int PORT, PROTOCOL, BACKLOG;
   sscanf(port, "%d", &PORT);
   sscanf(protocol, "%d", &PROTOCOL);
