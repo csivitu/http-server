@@ -21,7 +21,7 @@ int main() {
   const char* protocol = getenv("PROTOCOL");
   const char* backlog = getenv("BACKLOG");
 
-  //signal(SIGINT, handle_sigint);
+  signal(SIGINT, handle_sigint);
   ulogger_init("log.txt");
   ulogger_log(LOG_SUCCESS, "Server is starting on port %d...", port);
   
