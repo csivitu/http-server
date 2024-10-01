@@ -14,5 +14,6 @@ int main() {
   Server *srv = (Server *)MakeServer(AF_INET, PORT, SOCK_STREAM, PROTOCOL,
                                      BACKLOG, INADDR_ANY);
   start(srv);
+  stop(srv);
   return 0;
 }

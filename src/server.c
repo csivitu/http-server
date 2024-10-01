@@ -66,6 +66,15 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   return srv;
 }
 
+// **Added the stop function to free the server resources**
+void stop(Server *srv) {
+  if (srv) {
+    close(srv->socket);  // Close the server socket
+    free(srv);           // Free the allocated memory for the server
+    printf("Server resources freed and shutdown.\n");
+  }
+}
+
 void start(Server *srv) {
   char Input_Buffer[BUFFERSIZE];
   while (1) {
