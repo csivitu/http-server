@@ -5,12 +5,22 @@
  */
 
 #include "server.h"
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 
-#define PORT 8000
-#define PROTOCOL 0
-#define BACKLOG 10
 
-int main() {
+
+int main() { 
+  const char* port = getenv("PORT");
+  const char* protocol = getenv("PROTOCOL");
+  const char* backlog = getenv("BACKLOG");
+
+  int PORT, PROTOCOL, BACKLOG;
+  sscanf(port, "%d", &PORT);
+  sscanf(protocol, "%d", &PROTOCOL);
+  sscanf(backlog, "%d", &BACKLOG);
+
   Server *srv = (Server *)MakeServer(AF_INET, PORT, SOCK_STREAM, PROTOCOL,
                                      BACKLOG, INADDR_ANY);
   start(srv);
