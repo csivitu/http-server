@@ -88,6 +88,7 @@ void start(Server *srv) {
     }
 
     char *response = parseResponse(Input_Buffer, bytes);
+    printf("Response: %s\n", "Working Fine");
     write(newSocket, response, strlen(response));
     close(newSocket);
   }
