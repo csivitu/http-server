@@ -79,6 +79,7 @@ void handleRequest(char *Input_Buffer, size_t bytes, int socket) {
   char full_response[strlen(response) + file_size];
   strcpy(full_response, response);
   memcpy(full_response + strlen(response), buffer, sizeof(buffer));
+  ulogger_log(LOG_SUCCESS, "Response: %s", buffer);
   write(socket, full_response, sizeof(full_response));
   return;
 }
