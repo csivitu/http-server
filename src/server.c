@@ -6,16 +6,16 @@
 
 #include "server.h"
 #include "response.h"
-#include <netinet/in.h>
+// #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
+// #include <sys/socket.h>
 #include <unistd.h>
 
 Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
-                   uint64_t interface) {
+                   uint64_t interFace) {
   Server *srv = (Server *)malloc(sizeof(Server));
 
   srv->domain = domain;
@@ -24,18 +24,36 @@ Server *MakeServer(int domain, int port, int type, int protocol, int backlog,
   srv->protocol = protocol;
   srv->backlog = backlog;
 
+  // Memory Allocation for the address, to avoid runtime error during access of srv->address
+  srv->address = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  if (srv->address == NULL) {
+      perror("Failed to allocate memory for sockaddr_in");
+      free(srv);
+      exit(EXIT_FAILURE);
+  }
+  
+  memset(srv->address, 0, sizeof(struct sockaddr_in));
   srv->address->sin_family = domain;
   srv->address->sin_port = htons(port);
-  srv->address->sin_addr.s_addr = htonl(interface);
+  srv->address->sin_addr.s_addr = htonl(interFace);
+  // ISSUE TEST
 
   srv->socket = socket(domain, type, protocol);
+
+  printf("Domain: %d\n", srv->domain);
+  printf("Type: %d\n", srv->type);
+  printf("Port: %d\n", srv->port);
+  printf("Protocol: %d\n", srv->protocol);
+  printf("Backlog: %d\n", srv->backlog);
+
   if (srv->socket < 0) {
     perror("Socket Failure");
     exit(EXIT_FAILURE);
   }
 
-  if (bind(srv->socket, (struct sockaddr *)&srv->address,
-           sizeof(srv->address)) < 0) {
+  // &srv->address results in pointer to pointer. Use srv->address
+  if (bind(srv->socket, (struct sockaddr *)srv->address,
+           sizeof(struct sockaddr_in)) < 0) {
     perror("Bind Failure");
     exit(EXIT_FAILURE);
   }
@@ -61,7 +79,8 @@ void start(Server *srv) {
   char Input_Buffer[BUFFERSIZE];
   while (1) {
     printf("Idling.....\n");
-    int addlen = sizeof(srv->address);
+    //int addlen = sizeof(srv->address);
+    socklen_t addlen = sizeof(struct sockaddr_in); 
     int newSocket =
         accept(srv->socket, (struct sockaddr *)&srv->address, &addlen);
     size_t bytes = read(newSocket, Input_Buffer, BUFFERSIZE - 1);
