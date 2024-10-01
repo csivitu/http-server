@@ -5,6 +5,7 @@
  */
 
 #include "response.h"
+#include "logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,6 @@ char *parseResponse(char *Input_Buffer, size_t bytes) {
   char *full_response = (char *)(malloc(strlen(response) + file_size + 1));
   strcpy(full_response, response);
   strcat(full_response, buffer);  
-
+  ulogger_log(LOG_SUCCESS, "Response: %s", buffer);
   return full_response;
 }
